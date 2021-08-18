@@ -48,11 +48,12 @@ function resources(o: GenericStore): ResourceConstant[] {
 {
     const creepId: Id<Creep> = "1" as Id<Creep>;
     const creepOne: Creep | null = Game.getObjectById(creepId);
-    const creepThree: Creep = new Creep(creepId); // Works with typed ID
+    const creepTwo: Creep | null = Game.getObjectById<Creep>("2"); // deprecated $ExpectType Creep | null
+    const creepThree: Creep = new Creep(creepId); // Works with typed ID $ExpectType Creep
 
     if (creepOne) {
-        creepOne.hits;
-        const recycle = Game.getObjectById(creepOne.id);
+        creepOne.hits; // $ExpectType number
+        const recycle = Game.getObjectById(creepOne.id); // $ExpectType Creep | null
     }
 
     type StoreStructure = StructureContainer | StructureStorage | StructureLink;
@@ -60,8 +61,8 @@ function resources(o: GenericStore): ResourceConstant[] {
     const storeIdUnion: StoreStructure["id"] = "1234" as StoreStructure["id"];
     const stringID: string = storeUnionID; // Id<T> assignable implicitly to string
     const stringID2: string = storeIdUnion; // Id<T> assignable implicitly to string
-    const storeObject = Game.getObjectById(storeUnionID)!;
-    const storeObject2 = Game.getObjectById(storeIdUnion)!;
+    const storeObject = Game.getObjectById(storeUnionID)!; // $ExpectType StoreStructure
+    const storeObject2 = Game.getObjectById(storeIdUnion)!; // $ExpectType StructureContainer | StructureStorage | StructureLink
 
     // Object recognized
     switch (storeObject.structureType) {
@@ -72,6 +73,9 @@ function resources(o: GenericStore): ResourceConstant[] {
         default:
             storeObject.structureType === "link";
     }
+
+    // Default type is unknown if untyped Id provided
+    const untyped = Game.getObjectById("untyped"); // $ExpectType _HasId | null
 }
 
 // Game.creeps
@@ -94,7 +98,7 @@ function resources(o: GenericStore): ResourceConstant[] {
     PowerCreep.create("steve", POWER_CLASS.OPERATOR) === OK;
 
     for (const i of Object.keys(Game.powerCreeps)) {
-        const powerCreep = Game.powerCreeps[i];
+        const powerCreep = Game.powerCreeps[i]; // $ExpectType PowerCreep
 
         if (powerCreep.ticksToLive === undefined) {
             // Not spawned in world; spawn creep
@@ -111,7 +115,7 @@ function resources(o: GenericStore): ResourceConstant[] {
             } else {
                 // Boost resource
                 const targetSource = Game.getObjectById("targetSourceID" as Id<Source>)!;
-                const sourceEffect = targetSource.effects?.find((effect) => effect.effect === PWR_REGEN_SOURCE && effect.level > 0);
+                const sourceEffect = targetSource.effects?.find((effect) => effect.effect === PWR_REGEN_SOURCE && effect.level > 0); // $ExpectType RoomObjectEffect | undefined
                 if (!sourceEffect && powerCreep.powers[PWR_REGEN_SOURCE] && powerCreep.powers[PWR_REGEN_SOURCE].cooldown === 0) {
                     powerCreep.usePower(PWR_REGEN_SOURCE, targetSource);
                 }
@@ -130,7 +134,7 @@ function resources(o: GenericStore): ResourceConstant[] {
         powerCreep.upgrade(PWR_GENERATE_OPS);
     }
 
-    const myPowaCreeps = Game.rooms.sim.find(FIND_MY_POWER_CREEPS);
+    const myPowaCreeps = Game.rooms.sim.find(FIND_MY_POWER_CREEPS); // $ExpectType PowerCreep[]
 
     // Constant type checking
     POWER_INFO[PWR_GENERATE_OPS].className === POWER_CLASS.OPERATOR;
@@ -144,21 +148,21 @@ function resources(o: GenericStore): ResourceConstant[] {
         Game.spawns[i].createCreep(body);
 
         // Test StructureSpawn.Spawning
-        const creep: Spawning | null = Game.spawns[i].spawning;
+        const creep: Spawning | null = Game.spawns[i].spawning; // $ExpectType Spawning | null
         if (creep) {
-            const name: string = creep.name;
-            const needTime: number = creep.needTime;
-            const remainingTime: number = creep.remainingTime;
-            const creepSpawn: StructureSpawn = creep.spawn;
+            const name: string = creep.name; // $ExpectType string
+            const needTime: number = creep.needTime; // $ExpectType number
+            const remainingTime: number = creep.remainingTime; // $ExpectType number
+            const creepSpawn: StructureSpawn = creep.spawn; // $ExpectType StructureSpawn
 
             const cancelStatus: OK | ERR_NOT_OWNER = creep.cancel();
             const setDirectionStatus: OK | ERR_NOT_OWNER | ERR_INVALID_ARGS = creep.setDirections([TOP, BOTTOM, LEFT, RIGHT]);
         }
 
         const invaderCore = new StructureInvaderCore("" as Id<StructureInvaderCore>);
-        const invader = invaderCore.spawning;
+        const invader = invaderCore.spawning; // $ExpectType Spawning | null
         if (invader) {
-            const name = invader.name;
+            const name = invader.name; // $ExpectType string
         }
     }
 }
@@ -166,7 +170,7 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Game.time
 
 {
-    let time = Game.time;
+    let time = Game.time; // $ExpectType number
     time += 1;
 }
 
@@ -180,11 +184,11 @@ function resources(o: GenericStore): ResourceConstant[] {
 
 {
     for (const name of Object.keys(Game.creeps)) {
-        const startCpu = Game.cpu.getUsed();
+        const startCpu = Game.cpu.getUsed(); // $ExpectType number
 
         // creep logic goes here
 
-        const elapsed = Game.cpu.getUsed() - startCpu;
+        const elapsed = Game.cpu.getUsed() - startCpu; // $ExpectType number
     }
 }
 
@@ -197,7 +201,7 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Game.cpu.halt()
 {
     if (Game.cpu.hasOwnProperty("halt")) {
-        Game.cpu.halt!();
+        Game.cpu.halt!(); // $ExpectType never
     }
 }
 
@@ -216,17 +220,17 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Game.getObjectById(id)
 
 {
-    creep.memory.sourceId = creep.pos.findClosestByRange(FIND_SOURCES)!.id;
-    const source = Game.getObjectById<Source>(creep.memory.sourceId);
+    creep.memory.sourceId = creep.pos.findClosestByRange(FIND_SOURCES)!.id; // $ExpectType Id<Source>
+    const source = Game.getObjectById(creep.memory.sourceId); // $ExpectType Source | null
 }
 
 // Game.notify(message, [groupInterval])
 
 {
     if (creep.hits < creep.memory.lastHits) {
-        Game.notify(`Creep ${creep.toString()} has been attacked at ${creep.pos.toString()}!`);
+        Game.notify(`Creep ${creep.toString()} has been attacked at ${creep.pos.toString()}!`); // $ExpectType 0 | -8
     }
-    creep.memory.lastHits = creep.hits;
+    creep.memory.lastHits = creep.hits; // $ExpectType number
 }
 
 {
@@ -241,12 +245,12 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Game.map.describeExits()
 
 {
-    const exits = Game.map.describeExits("W8N3");
+    const exits = Game.map.describeExits("W8N3"); // $ExpectType Partial<Record<ExitKey, string>> | null
     if (exits) {
         keys(exits).map((exitKey) => {
-            const nextRoom = exits[exitKey];
+            const nextRoom = exits[exitKey]; // $ExpectType string | undefined
             const exitDir = +exitKey as ExitConstant;
-            const exitPos = creep.pos.findClosestByRange(exitDir);
+            const exitPos = creep.pos.findClosestByRange(exitDir); // $ExpectType RoomPosition | null
             return { nextRoom, exitPos };
         });
     }
@@ -258,7 +262,7 @@ function resources(o: GenericStore): ResourceConstant[] {
     if (creep.room.name !== anotherRoomName.name) {
         const exitDir = Game.map.findExit(creep.room, anotherRoomName);
         if (exitDir !== ERR_NO_PATH && exitDir !== ERR_INVALID_ARGS) {
-            const exit = creep.pos.findClosestByRange(exitDir);
+            const exit = creep.pos.findClosestByRange(exitDir); // $ExpectType RoomPosition | null
             if (exit !== null) {
                 creep.moveTo(exit);
             }
@@ -275,10 +279,10 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Game.map.findRoute()
 
 {
-    const route = Game.map.findRoute(creep.room, anotherRoomName);
+    const route = Game.map.findRoute(creep.room, anotherRoomName); // $ExpectType -2 | { exit: ExitConstant; room: string; }[]
 
     if (route !== ERR_NO_PATH && route.length > 0) {
-        const exit = creep.pos.findClosestByRange(route[0].exit);
+        const exit = creep.pos.findClosestByRange(route[0].exit); // $ExpectType RoomPosition | null
         if (exit !== null) {
             creep.moveTo(exit);
         }
@@ -286,6 +290,7 @@ function resources(o: GenericStore): ResourceConstant[] {
 }
 
 {
+    // $ExpectType -2 | { exit: ExitConstant; room: string; }[]
     const route = Game.map.findRoute(creep.room, anotherRoomName, {
         routeCallback(roomName, fromRoomName) {
             if (roomName === "W10S10") {
@@ -304,6 +309,7 @@ function resources(o: GenericStore): ResourceConstant[] {
     // Use `findRoute` to calculate a high-level plan for this path,
     // prioritizing highways and owned rooms
     const allowedRooms = { [from.roomName]: true };
+    // $ExpectType -2 | { exit: ExitConstant; room: string; }[]
     const route = Game.map.findRoute(from.roomName, to.roomName, {
         routeCallback(roomName) {
             const parsed = /^[WE]([0-9]+)[NS]([0-9]+)$/.exec(roomName);
@@ -328,6 +334,7 @@ function resources(o: GenericStore): ResourceConstant[] {
     }
 
     // Invoke PathFinder, allowing access only to rooms from `findRoute`
+    // $ExpectType PathFinderPath
     const ret = PathFinder.search(from, [to], {
         roomCallback: (roomName) => {
             if (allowedRooms[roomName] === undefined) {
@@ -342,7 +349,7 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Game.map.getRoomLinearDistance(roomName1, roomName2, [continuous])
 
 {
-    Game.map.getRoomLinearDistance("W1N1", "W4N2"); // 3
+    Game.map.getRoomLinearDistance("W1N1", "W4N2"); // 3 $ExpectType number
     Game.map.getRoomLinearDistance("E65S55", "W65S55", false); // 131
     Game.map.getRoomLinearDistance("E65S55", "W65S55", true); // 11
 }
@@ -351,17 +358,17 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Game.map.getTerrainAt(pos)
 
 {
-    Game.map.getTerrainAt(25, 20, "W10N10");
+    Game.map.getTerrainAt(25, 20, "W10N10"); // $ExpectType Terrain
 }
 
 {
-    Game.map.getTerrainAt(new RoomPosition(25, 20, "W10N10"));
+    Game.map.getTerrainAt(new RoomPosition(25, 20, "W10N10")); // $ExpectType Terrain
 }
 
 // Game.map.getRoomStatus(roomName)
 
 {
-    const roomStatus = Game.map.getRoomStatus(room.name);
+    const roomStatus = Game.map.getRoomStatus(room.name); // $ExpectType RoomStatus
     if (roomStatus.status === "normal") {
         creep.moveTo(room.getPositionAt(25, 25)!);
     }
@@ -371,19 +378,19 @@ function resources(o: GenericStore): ResourceConstant[] {
 
 {
     // Game.market.calcTransactionCost(amount, roomName1, roomName2)
-    const cost = Game.market.calcTransactionCost(1000, "W0N0", "W10N5");
+    const cost = Game.market.calcTransactionCost(1000, "W0N0", "W10N5"); // $ExpectType number
 
     // Game.market.cancelOrder(orderId)
     for (const id of Object.keys(Game.market.orders)) {
-        Game.market.cancelOrder(id);
+        Game.market.cancelOrder(id); // $ExpectType ScreepsReturnCode
     }
 
     // Game.market.changeOrderPrice(orderId, newPrice)
-    Game.market.changeOrderPrice("57bec1bf77f4d17c4c011960", 9.95);
+    Game.market.changeOrderPrice("57bec1bf77f4d17c4c011960", 9.95); // $ExpectType ScreepsReturnCode
 
     // Game.market.createOrder({type, resourceType, price, totalAmount, [roomName]})
-    Game.market.createOrder({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM, price: 9.95, totalAmount: 10000, roomName: "W1N1" });
-    Game.market.createOrder({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM, price: 9.95, totalAmount: 10000 });
+    Game.market.createOrder({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM, price: 9.95, totalAmount: 10000, roomName: "W1N1" }); // $ExpectType ScreepsReturnCode
+    Game.market.createOrder({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM, price: 9.95, totalAmount: 10000 }); // $ExpectType ScreepsReturnCode
 
     // Testing the hardcoded string literal value of the `type` field
     {
@@ -401,31 +408,32 @@ function resources(o: GenericStore): ResourceConstant[] {
     }
 
     // Game.market.deal(orderId, amount, [yourRoomName])
-    Game.market.deal("57cd2b12cda69a004ae223a3", 1000, "W1N1");
+    Game.market.deal("57cd2b12cda69a004ae223a3", 1000, "W1N1"); // $ExpectType ScreepsReturnCode
 
     const amountToBuy = 2000;
     const maxTransferEnergyCost = 500;
-    const orders = Game.market.getAllOrders({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM });
+    const orders = Game.market.getAllOrders({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM }); // $ExpectType Order[]
 
     for (const i of orders) {
         if (i.roomName) {
-            const transferEnergyCost = Game.market.calcTransactionCost(amountToBuy, "W1N1", i.roomName);
+            const transferEnergyCost = Game.market.calcTransactionCost(amountToBuy, "W1N1", i.roomName); // $ExpectType number
 
             if (transferEnergyCost < maxTransferEnergyCost) {
-                Game.market.deal(i.id, amountToBuy, "W1N1");
+                Game.market.deal(i.id, amountToBuy, "W1N1"); // $ExpectType ScreepsReturnCode
                 break;
             }
         }
     }
 
     // Game.market.extendOrder(orderId, addAmount)
-    Game.market.extendOrder("57bec1bf77f4d17c4c011960", 10000);
+    Game.market.extendOrder("57bec1bf77f4d17c4c011960", 10000); // $ExpectType ScreepsReturnCode
 
     // Game.market.getAllOrders([filter])
-    Game.market.getAllOrders();
-    Game.market.getAllOrders({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM });
+    Game.market.getAllOrders(); // $ExpectType Order[]
+    Game.market.getAllOrders({ type: ORDER_SELL, resourceType: RESOURCE_GHODIUM }); // $ExpectType Order[]
 
     const targetRoom = "W1N1";
+    // $ExpectType Order[]
     Game.market.getAllOrders(
         (currentOrder) =>
             currentOrder.resourceType === RESOURCE_GHODIUM &&
@@ -434,27 +442,26 @@ function resources(o: GenericStore): ResourceConstant[] {
     );
 
     // Game.market.getOrderById(id)
-    const order = Game.market.getOrderById("55c34a6b5be41a0a6e80c123");
+    const order = Game.market.getOrderById("55c34a6b5be41a0a6e80c123"); // $ExpectType Order | null
 
     // Subscription tokens
-    Game.market.getAllOrders({ type: ORDER_SELL, resourceType: SUBSCRIPTION_TOKEN });
-    Game.market.createOrder({ type: ORDER_BUY, resourceType: SUBSCRIPTION_TOKEN, totalAmount: 10000000, price: 1 });
-
-    const priceHistory = Game.market.getHistory(RESOURCE_FIXTURES);
+    Game.market.getAllOrders({ type: ORDER_SELL, resourceType: SUBSCRIPTION_TOKEN }); // $ExpectType Order[]
+    Game.market.createOrder({ type: ORDER_BUY, resourceType: SUBSCRIPTION_TOKEN, totalAmount: 10000000, price: 1 }); // $ExpectType ScreepsReturnCode
+    const priceHistory = Game.market.getHistory(RESOURCE_FIXTURES); // $ExpectType PriceHistory[]
 
     const avgPrice: number = priceHistory[0].avgPrice;
     const stddevPrice: number = priceHistory[0].stddevPrice;
     const volume: number = priceHistory[0].volume;
 
     // Game.market.getHistory([resourceType])
-    const energyHistory = Game.market.getHistory(RESOURCE_ENERGY);
-    const pixelHistory = Game.market.getHistory(PIXEL);
+    const energyHistory = Game.market.getHistory(RESOURCE_ENERGY); // $ExpectType PriceHistory[]
+    const pixelHistory = Game.market.getHistory(PIXEL); // $ExpectType PriceHistory[]
 }
 
 // PathFinder
 
 {
-    const pfCreep = Game.creeps.John;
+    const pfCreep = Game.creeps.John; // $ExpectType Creep
 
     const goals = pfCreep.room.find(FIND_SOURCES).map((source) => {
         // We can't actually walk on sources-- set `range` to 1
@@ -462,6 +469,7 @@ function resources(o: GenericStore): ResourceConstant[] {
         return { pos: source.pos, range: 1 };
     });
 
+    // $ExpectType PathFinderPath
     const ret = PathFinder.search(pfCreep.pos, goals, {
         // We need to set the defaults costs higher so that we
         // can set the road cost lower in `roomCallback`
@@ -469,7 +477,8 @@ function resources(o: GenericStore): ResourceConstant[] {
         swampCost: 10,
 
         roomCallback(roomName) {
-            const curRoom = Game.rooms[roomName];
+            const curRoom = Game.rooms[roomName]; // $ExpectType Room
+
             // In this example `room` will always exist, but since
             // PathFinder supports searches which span multiple rooms
             // you should be careful!
@@ -508,7 +517,7 @@ function resources(o: GenericStore): ResourceConstant[] {
         },
     });
 
-    const pos = ret.path[0];
+    const pos = ret.path[0]; // $ExpectType RoomPosition
     pfCreep.move(pfCreep.pos.getDirectionTo(pos));
 
     // CostMatrix Creation
@@ -590,24 +599,25 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Find Overloads
 
 {
-    const creeps = room.find(FIND_HOSTILE_CREEPS);
+    const creeps = room.find(FIND_HOSTILE_CREEPS); // $ExpectType Creep[]
     creeps[0].say(creeps[1].name);
 
-    const flags = room.find(FIND_FLAGS);
+    const flags = room.find(FIND_FLAGS); // $ExpectType Flag[]
     flags[0].remove();
 
-    const spawns = room.find(FIND_HOSTILE_SPAWNS);
+    const spawns = room.find(FIND_HOSTILE_SPAWNS); // $ExpectType StructureSpawn[]
     spawns[0].spawning;
 
-    const sources = room.find(FIND_SOURCES);
+    const sources = room.find(FIND_SOURCES); // $ExpectType Source[]
     sources[0].ticksToRegeneration;
 
-    const resources = room.find(FIND_DROPPED_RESOURCES);
+    const resources = room.find(FIND_DROPPED_RESOURCES); // $ExpectType Resource<ResourceConstant>[]
     resources[0].resourceType;
 
-    const sites = room.find(FIND_CONSTRUCTION_SITES);
+    const sites = room.find(FIND_CONSTRUCTION_SITES); // $ExpectType ConstructionSite<BuildableStructureConstant>[]
     sites[0].remove();
 
+    // $ExpectType ConstructionSite<"extension">[]
     const extensionsites = room.find(FIND_CONSTRUCTION_SITES, {
         filter: (site): site is ConstructionSite<STRUCTURE_EXTENSION> => {
             return site.structureType === STRUCTURE_EXTENSION;
@@ -617,11 +627,12 @@ function resources(o: GenericStore): ResourceConstant[] {
     extensionsites[0].structureType === STRUCTURE_EXTENSION;
 
     // Should have type (_HasRoomPosition | RoomPosition)[]
-    const exits = room.find(FIND_EXIT);
+    const exits = room.find(FIND_EXIT); // $ExpectType RoomPosition[]
 
-    const creepsHere = room.lookForAt(LOOK_CREEPS, 10, 10);
+    const creepsHere = room.lookForAt(LOOK_CREEPS, 10, 10); // $ExpectType Creep[]
     creepsHere[0].getActiveBodyparts(ATTACK);
 
+    // $ExpectType StructureTower[]
     const towers = room.find<StructureTower>(FIND_MY_STRUCTURES, {
         filter: (structure) => {
             return structure.structureType === STRUCTURE_TOWER;
@@ -637,6 +648,7 @@ function resources(o: GenericStore): ResourceConstant[] {
         return structure.structureType === STRUCTURE_TOWER;
     };
 
+    // $ExpectType StructureTower
     const tower = room.find(FIND_MY_STRUCTURES, {
         filter: isTower,
     })[0];
@@ -661,13 +673,13 @@ function resources(o: GenericStore): ResourceConstant[] {
 
 {
     // Should have type Creep
-    const hostileCreep = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+    const hostileCreep = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS); // $ExpectType Creep | null
     if (hostileCreep !== null) {
         creep.say(hostileCreep.name);
     }
 
+    // $ExpectType StructureTower | null
     const tower = creep.pos.findClosestByPath<StructureTower>(FIND_HOSTILE_STRUCTURES, {
-        // ? s should be AnyOwnedStructure in the future
         filter: (structure) => {
             return structure.structureType === STRUCTURE_TOWER;
         },
@@ -685,6 +697,7 @@ function resources(o: GenericStore): ResourceConstant[] {
         };
     };
 
+    // $ExpectType StructureTower | null
     const tower2 = creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {
         filter: isStructureType(STRUCTURE_TOWER),
         algorithm: "astar",
@@ -694,7 +707,7 @@ function resources(o: GenericStore): ResourceConstant[] {
         tower2.attack(powerCreep);
     }
 
-    const creepWithEnergy = creep.pos.findClosestByPath(creep.room.find(FIND_CREEPS), { filter: (c) => c.store.energy > 0 });
+    const creepWithEnergy = creep.pos.findClosestByPath(creep.room.find(FIND_CREEPS), { filter: (c) => c.store.energy > 0 }); // $ExpectType Creep | null
 
     const creepAbove = creep.pos.findClosestByPath(
         creep.room.find(FIND_CREEPS).map((c) => c.pos),
@@ -704,8 +717,8 @@ function resources(o: GenericStore): ResourceConstant[] {
         },
     );
 
+    // $ExpectType StructureRampart | null
     const rampart = creep.pos.findClosestByRange<StructureRampart>(FIND_HOSTILE_STRUCTURES, {
-        // ? s should be AnyOwnedStructure in the future
         filter: (structure) => {
             return structure.structureType === STRUCTURE_RAMPART;
         },
@@ -718,8 +731,8 @@ function resources(o: GenericStore): ResourceConstant[] {
     const hostileCreeps = creep.pos.findInRange(FIND_HOSTILE_CREEPS, 10);
     hostileCreeps[0].saying;
 
+    // $ExpectType StructureLab[]
     const labs = creep.pos.findInRange<StructureLab>(FIND_MY_STRUCTURES, 4, {
-        // ? s should be AnyOwnedStructure in the future
         filter: (structure) => {
             return structure.structureType === STRUCTURE_LAB;
         },
@@ -905,7 +918,7 @@ function resources(o: GenericStore): ResourceConstant[] {
 // LookAt Finds
 
 {
-    const matrix = room.lookAtArea(10, 10, 20, 20, false);
+    const matrix = room.lookAtArea(10, 10, 20, 20, false); // $ExpectType LookAtResultMatrix<LookConstant>
     for (const y of Object.keys(matrix)) {
         const row = matrix[y as unknown as number];
         for (const x of Object.keys(row)) {
@@ -917,18 +930,18 @@ function resources(o: GenericStore): ResourceConstant[] {
         }
     }
 
-    const nukes = room.lookForAt(LOOK_NUKES, creep.pos);
+    const nukes = room.lookForAt(LOOK_NUKES, creep.pos); // $ExpectType Nuke[]
 
     nukes[0].launchRoomName;
 
-    const flags = room.lookForAtArea(LOOK_FLAGS, 10, 10, 20, 20);
+    const flags = room.lookForAtArea(LOOK_FLAGS, 10, 10, 20, 20); // $ExpectType LookForAtAreaResultMatrix<Flag>
 
     const x = flags[10];
     const y = x[11];
     const entry = y[0];
     entry.remove();
 
-    const creeps = room.lookForAtArea(LOOK_CREEPS, 10, 10, 20, 20, true);
+    const creeps = room.lookForAtArea(LOOK_CREEPS, 10, 10, 20, 20, true); // $ExpectType LookForAtAreaResultArray<Creep, "creep">
 
     creeps[0].x;
     creeps[0].y;
@@ -955,29 +968,29 @@ function resources(o: GenericStore): ResourceConstant[] {
 
     const extension = new StructureExtension("" as Id<StructureExtension>);
 
-    const e1: number = extension.store.getUsedCapacity(RESOURCE_ENERGY);
-    const e2: number = extension.store[RESOURCE_ENERGY];
+    const e1: number = extension.store.getUsedCapacity(RESOURCE_ENERGY); // $ExpectType number
+    const e2: number = extension.store[RESOURCE_ENERGY]; // $ExpectType number
 
     // Invalid resource type for extension
-    const eg1: null = extension.store.getUsedCapacity(RESOURCE_GHODIUM);
-    const eg2: null = extension.store.getFreeCapacity(RESOURCE_GHODIUM);
-    const eg3: null = extension.store.getCapacity(RESOURCE_GHODIUM);
-    const eg4: 0 = extension.store.G;
+    const eg1: null = extension.store.getUsedCapacity(RESOURCE_GHODIUM); // $ExpectType null
+    const eg2: null = extension.store.getFreeCapacity(RESOURCE_GHODIUM); // $ExpectType null
+    const eg3: null = extension.store.getCapacity(RESOURCE_GHODIUM); // $ExpectType null
+    const eg4: 0 = extension.store.G; // $ExpectType 0
 
     const storage = new StructureStorage("" as Id<StructureStorage>);
 
-    const sg1: number = storage.store.getUsedCapacity(RESOURCE_GHODIUM);
-    const sg2: number = storage.store.getFreeCapacity(RESOURCE_GHODIUM);
-    const sg3: number = storage.store.getCapacity(RESOURCE_GHODIUM);
+    const sg1: number = storage.store.getUsedCapacity(RESOURCE_GHODIUM); // $ExpectType number
+    const sg2: number = storage.store.getFreeCapacity(RESOURCE_GHODIUM); // $ExpectType number
+    const sg3: number = storage.store.getCapacity(RESOURCE_GHODIUM); // $ExpectType number
 }
 
 // Advanced Structure types
 {
-    const owned = Game.getObjectById("blah" as Id<AnyOwnedStructure>)!;
-    const owner = owned.owner && owned.owner.username;
+    const owned = Game.getObjectById("blah" as Id<AnyOwnedStructure>)!; // $ExpectType AnyOwnedStructure
+    const owner = owned.owner && owned.owner.username; // $ExpectType string | undefined
     owned.notifyWhenAttacked(false);
 
-    const structs = room.find(FIND_MY_STRUCTURES);
+    const structs = room.find(FIND_MY_STRUCTURES); // $ExpectType AnyOwnedStructure[]
     structs.forEach((struct) => {
         switch (struct.structureType) {
             case STRUCTURE_CONTROLLER:
@@ -989,17 +1002,19 @@ function resources(o: GenericStore): ResourceConstant[] {
         }
     });
 
-    const unowned = Game.getObjectById("blah2" as Id<AnyStructure>)!;
+    const unowned = Game.getObjectById("blah2" as Id<AnyStructure>)!; // $ExpectType AnyStructure
     const hp = unowned.hits / unowned.hitsMax;
 
     // test discriminated union
     switch (unowned.structureType) {
         case STRUCTURE_TOWER:
+            unowned; // $ExpectType StructureTower
             unowned.heal(Game.creeps.myCreep);
             break;
         case STRUCTURE_CONTAINER:
         case STRUCTURE_STORAGE:
         case STRUCTURE_TERMINAL:
+            unowned.store; // $ExpectType StoreDefinition
             const energyPercent = unowned.store.energy / unowned.storeCapacity;
             break;
         case STRUCTURE_WALL:
@@ -1028,24 +1043,25 @@ function resources(o: GenericStore): ResourceConstant[] {
 
 {
     // Test that you can use signatures
-    EXTENSION_ENERGY_CAPACITY[Game.rooms.myRoom.controller!.level];
+    EXTENSION_ENERGY_CAPACITY[Game.rooms.myRoom.controller!.level]; // $ExpectType number
 
-    REACTIONS[Object.keys(creep.carry)[0]];
+    REACTIONS[Object.keys(creep.carry)[0]]; // $ExpectType { [resource: string]: string; }
 
-    BOOSTS[creep.body[0].type];
+    BOOSTS[creep.body[0].type as string]; // $ExpectType { [boost: string]: { [action: string]: number; }; }
 }
 
 // Tombstones
 
 {
-    const tombstone = room.find(FIND_TOMBSTONES)[0];
+    const tombstone = room.find(FIND_TOMBSTONES)[0]; // $ExpectType Tombstone
 
+    tombstone.creep; // $ExpectType AnyCreep
     (tombstone.creep as PowerCreep).spawnCooldownTime;
     (tombstone.creep as Creep).my;
 
-    tombstone.store.energy;
+    tombstone.store; // $ExpectType StoreDefinitionUnlimited
 
-    tombstone.id;
+    tombstone.id; // $ExpectType Id<Tombstone>
 
     const creep = Game.creeps["dave"];
     creep.withdraw(tombstone, RESOURCE_ENERGY);
@@ -1054,7 +1070,10 @@ function resources(o: GenericStore): ResourceConstant[] {
 // Ruin
 
 {
-    const ruin = room.find(FIND_RUINS)[0];
+    const ruin = room.find(FIND_RUINS)[0]; // $ExpectType Ruin
+
+    ruin.store; // $ExpectType StoreDefinitionUnlimited
+    ruin.structure; // $ExpectType AnyStructure
 
     creep.withdraw(ruin, RESOURCE_ENERGY);
     powerCreep.withdraw(ruin, RESOURCE_ENERGY);
@@ -1070,7 +1089,7 @@ function resources(o: GenericStore): ResourceConstant[] {
 // StructurePortal
 
 {
-    const portals = room.find<StructurePortal>(FIND_STRUCTURES, { filter: (s) => s.structureType === STRUCTURE_PORTAL });
+    const portals = room.find<StructurePortal>(FIND_STRUCTURES, { filter: (s) => s.structureType === STRUCTURE_PORTAL }); // $ExpectType StructurePortal[]
     portals.forEach((p: StructurePortal) => {
         const state = p.ticksToDecay === undefined ? "stable" : "unstable";
         if (p.destination instanceof RoomPosition) {
@@ -1084,14 +1103,14 @@ function resources(o: GenericStore): ResourceConstant[] {
 // ConstructionSite
 
 {
-    room.createConstructionSite(10, 10, STRUCTURE_EXTENSION);
-    room.createConstructionSite(10, 11, STRUCTURE_SPAWN, "mySpawn");
+    room.createConstructionSite(10, 10, STRUCTURE_EXTENSION); // $ExpectType ScreepsReturnCode
+    room.createConstructionSite(10, 11, STRUCTURE_SPAWN, "mySpawn"); // $ExpectType ScreepsReturnCode
 
     const pos = new RoomPosition(10, 10, room.name);
-    room.createConstructionSite(pos, STRUCTURE_EXTENSION);
-    room.createConstructionSite(pos, STRUCTURE_SPAWN, "mySpawn");
-    pos.createConstructionSite(STRUCTURE_EXTENSION);
-    pos.createConstructionSite(STRUCTURE_SPAWN, "mySpawn");
+    room.createConstructionSite(pos, STRUCTURE_EXTENSION); // $ExpectType ScreepsReturnCode
+    room.createConstructionSite(pos, STRUCTURE_SPAWN, "mySpawn"); // $ExpectType ScreepsReturnCode
+    pos.createConstructionSite(STRUCTURE_EXTENSION); // $ExpectType ScreepsReturnCode
+    pos.createConstructionSite(STRUCTURE_SPAWN, "mySpawn"); // $ExpectType ScreepsReturnCode
 }
 
 // StructureLab
@@ -1102,35 +1121,36 @@ function resources(o: GenericStore): ResourceConstant[] {
     const lab2 = Game.getObjectById("lab" as Id<StructureLab>);
     if (lab0 !== null && lab1 !== null && lab2 !== null) {
         if (lab1.mineralAmount >= LAB_REACTION_AMOUNT && lab2.mineralAmount >= LAB_REACTION_AMOUNT && lab0.mineralType === null) {
-            lab0.runReaction(lab1, lab2);
+            lab0.runReaction(lab1, lab2); // $ExpectType ScreepsReturnCode
         }
         // nevermind, reverse that
-        lab0.reverseReaction(lab1, lab2);
+        lab0.reverseReaction(lab1, lab2); // $ExpectType ScreepsReturnCode
     }
 }
 
 // Room event log
 
 {
-    room.getEventLog();
-    const eventStr = room.getEventLog(true);
+    room.getEventLog(); // $ExpectType EventItem[]
+    const eventStr = room.getEventLog(true); // $ExpectType string
     if (eventStr.includes(`build:4`)) {
         // Build occured on last tick.
     }
 
-    const events = room.getEventLog();
+    const events = room.getEventLog(); // $ExpectType EventItem[]
 
-    const event = events[0];
+    const event = events[0]; // $ExpectType EventItem
 
     switch (event.event) {
         case EVENT_ATTACK:
-            const attackType: EventAttackType = event.data.attackType;
+            const attackType: EventAttackType = event.data.attackType; // $ExpectType EventAttackType
             break;
         case EVENT_BUILD:
-            const incomplete: boolean = event.data.incomplete;
+            const incomplete: boolean = event.data.incomplete; // $ExpectType boolean
+            event.data.amount; // $ExpectType number
             break;
         case EVENT_POWER:
-            const power = event.data.power;
+            const power = event.data.power; // $ExpectType PowerConstant
             break;
     }
 }
@@ -1140,7 +1160,7 @@ function resources(o: GenericStore): ResourceConstant[] {
 {
     const room = Game.rooms[""];
 
-    const myTerrain = room.getTerrain();
+    const myTerrain = room.getTerrain(); // $ExpectType RoomTerrain
 
     const otherTerrain = new Room.Terrain("E2S7");
 
@@ -1166,7 +1186,7 @@ function resources(o: GenericStore): ResourceConstant[] {
     for (const rawTerrain of [myRawTerrain, otherRawTerrain, anotherRawTerrain]) {
         for (let y = 0; y < 50; y++) {
             for (let x = 0; x < 50; x++) {
-                const code = rawTerrain[y * 50 + x];
+                const code = rawTerrain[y * 50 + x]; // $ExpectType number
                 if (code === 0) {
                     /*plain*/
                 }
@@ -1208,15 +1228,15 @@ function atackPower(creep: Creep) {
     creep.transfer(factory, RESOURCE_LEMERGIUM_BAR, 16);
     creep.transfer(factory, RESOURCE_ENERGY, 8);
 
-    factory.produce(RESOURCE_PHLEGM);
+    factory.produce(RESOURCE_PHLEGM); // $ExpectType ScreepsReturnCode
 
-    factory.produce(RESOURCE_BATTERY);
-    factory.produce(RESOURCE_ENERGY);
+    factory.produce(RESOURCE_BATTERY); // $ExpectType ScreepsReturnCode
+    factory.produce(RESOURCE_ENERGY); // $ExpectType ScreepsReturnCode
 
-    factory.produce(RESOURCE_GHODIUM);
-    factory.produce(RESOURCE_GHODIUM_MELT);
+    factory.produce(RESOURCE_GHODIUM); // $ExpectType ScreepsReturnCode
+    factory.produce(RESOURCE_GHODIUM_MELT); // $ExpectType ScreepsReturnCode
 
-    creep.withdraw(factory, RESOURCE_PHLEGM);
+    creep.withdraw(factory, RESOURCE_PHLEGM); // $ExpectType ScreepsReturnCode
 
     // Energy and ghodium commodities
     COMMODITIES[RESOURCE_ENERGY];
@@ -1272,12 +1292,12 @@ function atackPower(creep: Creep) {
 
 // <strike>Horse armor!</strike>Pixels!
 {
-    const ret: OK | ERR_NOT_ENOUGH_RESOURCES | ERR_FULL = Game.cpu.generatePixel();
+    const ret: OK | ERR_NOT_ENOUGH_RESOURCES = Game.cpu.generatePixel(); // $ExpectType 0 | -6
 }
 
 // Game.map.visual
 {
-    const mapVis = Game.map.visual;
+    const mapVis = Game.map.visual; // $ExpectType MapVisual
     const point1 = new RoomPosition(1, 1, "E1N1");
     const point2 = new RoomPosition(1, 1, "E1N8");
     const point3 = new RoomPosition(1, 1, "E8N8");
@@ -1285,11 +1305,11 @@ function atackPower(creep: Creep) {
 
     mapVis.line(point1, point2).circle(point3, { fill: "#f2f2f2" }).poly([point1, point2, point3, point4]).rect(point3, 50, 50);
 
-    const size: number = mapVis.getSize();
+    const size: number = mapVis.getSize(); // $ExpectType number
 
-    const visData = mapVis.export();
-    mapVis.clear();
-    mapVis.import(visData);
+    const visData = mapVis.export(); // $ExpectType string
+    mapVis.clear(); // $ExpectType MapVisual
+    mapVis.import(visData); // $ExpectType MapVisual
 }
 
 // Store
