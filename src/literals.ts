@@ -89,7 +89,8 @@ type FindConstant =
     | FIND_MY_POWER_CREEPS
     | FIND_HOSTILE_POWER_CREEPS
     | FIND_DEPOSITS
-    | FIND_RUINS;
+    | FIND_RUINS
+    | FIND_REACTORS;
 
 type FIND_EXIT_TOP = 1;
 type FIND_EXIT_RIGHT = 3;
@@ -119,6 +120,7 @@ type FIND_MY_POWER_CREEPS = 120;
 type FIND_HOSTILE_POWER_CREEPS = 121;
 type FIND_DEPOSITS = 122;
 type FIND_RUINS = 123;
+type FIND_REACTORS = 10051;
 
 // Filter Options
 
@@ -295,7 +297,8 @@ type MineralConstant =
     | RESOURCE_ZYNTHIUM
     | RESOURCE_OXYGEN
     | RESOURCE_HYDROGEN
-    | RESOURCE_CATALYST;
+    | RESOURCE_CATALYST
+    | RESOURCE_THORIUM;
 
 /** The compounds which can't boost */
 type MineralBaseCompoundsConstant = RESOURCE_HYDROXIDE | RESOURCE_ZYNTHIUM_KEANITE | RESOURCE_UTRIUM_LEMERGITE | RESOURCE_GHODIUM;
@@ -477,6 +480,8 @@ type RESOURCE_EXTRACT = "extract";
 type RESOURCE_SPIRIT = "spirit";
 type RESOURCE_EMANATION = "emanation";
 type RESOURCE_ESSENCE = "essence";
+
+type RESOURCE_THORIUM = "T";
 
 type SUBSCRIPTION_TOKEN = "token";
 type CPU_UNLOCK = "cpuUnlock";

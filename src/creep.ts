@@ -191,6 +191,16 @@ interface Creep extends RoomObject {
      */
     claimController(target: StructureController): CreepActionReturnCode | ERR_FULL | ERR_GCL_NOT_ENOUGH | ERR_ACCESS_DENIED;
     /**
+     * Requires the CLAIM body part.
+     *
+     * Claims a reactor under your control.
+     *
+     * The target has to be at adjacent square to the creep.
+     * @param target The target reactor object.
+     * @returns Result Code: OK, ERR_NOT_OWNER, ERR_BUSY, ERR_INVALID_TARGET, ERR_NOT_IN_RANGE, ERR_NO_BODYPART
+     */
+    claimReactor(target: Reactor): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE | ERR_NO_BODYPART;
+    /**
      * Dismantles any structure that can be constructed (even hostile) returning 50% of the energy spent on its repair.
      *
      * Requires the WORK body part.
@@ -506,7 +516,7 @@ interface Creep extends RoomObject {
      * - ERR_NOT_IN_RANGE: The target is too far away.
      * - ERR_INVALID_ARGS: The resourceType is not one of the {@link ResourceConstant RESOURCE_*} constants, or the amount is incorrect.
      */
-    transfer(target: AnyCreep | Structure, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
+    transfer(target: AnyCreep | Structure | Reactor, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
     /**
      * Upgrade your controller to the next level using carried energy.
      *
@@ -531,7 +541,7 @@ interface Creep extends RoomObject {
      */
     upgradeController(target: StructureController): ScreepsReturnCode | ERR_ACCESS_DENIED;
     /**
-     * Withdraw resources from a structure, a tombstone or a ruin.
+     * Withdraw resources from a structure, a tombstone, a ruin or a reactor.
      *
      * The target has to be at adjacent square to the creep. Multiple creeps can withdraw from the same object in the same tick.
      * Your creeps can withdraw resources from hostile structures/tombstones as well, in case if there is no hostile rampart on top of it.
@@ -552,7 +562,7 @@ interface Creep extends RoomObject {
      * - ERR_NOT_IN_RANGE: The target is too far away.
      * - ERR_INVALID_ARGS: The resourceType is not one of the {@link ResourceConstant RESOURCE_*} constants, or the amount is incorrect.
      */
-    withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
+    withdraw(target: Structure | Tombstone | Ruin | Reactor, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
 }
 
 interface CreepConstructor extends _Constructor<Creep>, _ConstructorById<Creep> {}

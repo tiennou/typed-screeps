@@ -1464,3 +1464,31 @@ function atackPower(creep: Creep) {
         console.logUnsafe("<p>This is an unsafe log message</p>");
     }
 }
+
+// Season5
+{
+    const minerals = room.find(FIND_MINERALS);
+    const thorium = minerals.find((m) => m.mineralType === RESOURCE_THORIUM);
+
+    if (thorium) {
+        room.createConstructionSite(thorium.pos, STRUCTURE_EXTRACTOR);
+    }
+
+    const reactors = room.find(FIND_REACTORS);
+    const reactor: Reactor = reactors[0];
+    const reactorFromId = Game.getObjectById(reactor.id);
+
+    if (creep.claimReactor(reactor) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(reactor);
+    }
+
+    if (reactor.store[RESOURCE_THORIUM] < 100) {
+        creep.transfer(reactor, RESOURCE_THORIUM);
+    }
+
+    if (reactor.store.getFreeCapacity(RESOURCE_THORIUM) > 0) {
+        creep.transfer(reactor, RESOURCE_THORIUM);
+    }
+
+    creep.withdraw(reactor, RESOURCE_THORIUM);
+}

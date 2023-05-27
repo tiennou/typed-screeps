@@ -81,6 +81,7 @@ declare const FIND_MY_POWER_CREEPS: FIND_MY_POWER_CREEPS;
 declare const FIND_HOSTILE_POWER_CREEPS: FIND_HOSTILE_POWER_CREEPS;
 declare const FIND_DEPOSITS: FIND_DEPOSITS;
 declare const FIND_RUINS: FIND_RUINS;
+declare const FIND_REACTORS: FIND_REACTORS;
 
 declare const TOP: TOP;
 declare const TOP_RIGHT: TOP_RIGHT;
@@ -338,6 +339,8 @@ declare const RESOURCE_EXTRACT: RESOURCE_EXTRACT;
 declare const RESOURCE_SPIRIT: RESOURCE_SPIRIT;
 declare const RESOURCE_EMANATION: RESOURCE_EMANATION;
 declare const RESOURCE_ESSENCE: RESOURCE_ESSENCE;
+
+declare const RESOURCE_THORIUM: RESOURCE_THORIUM;
 
 declare const RESOURCES_ALL: ResourceConstant[];
 
@@ -1302,6 +1305,16 @@ interface Creep extends RoomObject {
      */
     claimController(target: StructureController): CreepActionReturnCode | ERR_FULL | ERR_GCL_NOT_ENOUGH | ERR_ACCESS_DENIED;
     /**
+     * Requires the CLAIM body part.
+     *
+     * Claims a reactor under your control.
+     *
+     * The target has to be at adjacent square to the creep.
+     * @param target The target reactor object.
+     * @returns Result Code: OK, ERR_NOT_OWNER, ERR_BUSY, ERR_INVALID_TARGET, ERR_NOT_IN_RANGE, ERR_NO_BODYPART
+     */
+    claimReactor(target: Reactor): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE | ERR_NO_BODYPART;
+    /**
      * Dismantles any structure that can be constructed (even hostile) returning 50% of the energy spent on its repair.
      *
      * Requires the WORK body part.
@@ -1617,7 +1630,7 @@ interface Creep extends RoomObject {
      * - ERR_NOT_IN_RANGE: The target is too far away.
      * - ERR_INVALID_ARGS: The resourceType is not one of the {@link ResourceConstant RESOURCE_*} constants, or the amount is incorrect.
      */
-    transfer(target: AnyCreep | Structure, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
+    transfer(target: AnyCreep | Structure | Reactor, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
     /**
      * Upgrade your controller to the next level using carried energy.
      *
@@ -1642,7 +1655,7 @@ interface Creep extends RoomObject {
      */
     upgradeController(target: StructureController): ScreepsReturnCode | ERR_ACCESS_DENIED;
     /**
-     * Withdraw resources from a structure, a tombstone or a ruin.
+     * Withdraw resources from a structure, a tombstone, a ruin or a reactor.
      *
      * The target has to be at adjacent square to the creep. Multiple creeps can withdraw from the same object in the same tick.
      * Your creeps can withdraw resources from hostile structures/tombstones as well, in case if there is no hostile rampart on top of it.
@@ -1663,7 +1676,7 @@ interface Creep extends RoomObject {
      * - ERR_NOT_IN_RANGE: The target is too far away.
      * - ERR_INVALID_ARGS: The resourceType is not one of the {@link ResourceConstant RESOURCE_*} constants, or the amount is incorrect.
      */
-    withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
+    withdraw(target: Structure | Tombstone | Ruin | Reactor, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode;
 }
 
 interface CreepConstructor extends _Constructor<Creep>, _ConstructorById<Creep> {}
@@ -2203,7 +2216,8 @@ interface FindTypes {
         | Nuke
         | Tombstone
         | Deposit
-        | Ruin;
+        | Ruin
+        | Reactor;
     [FIND_EXIT_TOP]: RoomPosition;
     [FIND_EXIT_RIGHT]: RoomPosition;
     [FIND_EXIT_BOTTOM]: RoomPosition;
@@ -2232,6 +2246,7 @@ interface FindTypes {
     [FIND_HOSTILE_POWER_CREEPS]: PowerCreep;
     [FIND_DEPOSITS]: Deposit;
     [FIND_RUINS]: Ruin;
+    [FIND_REACTORS]: Reactor;
 }
 
 interface FindPathOpts {
@@ -2529,7 +2544,8 @@ type FindConstant =
     | FIND_MY_POWER_CREEPS
     | FIND_HOSTILE_POWER_CREEPS
     | FIND_DEPOSITS
-    | FIND_RUINS;
+    | FIND_RUINS
+    | FIND_REACTORS;
 
 type FIND_EXIT_TOP = 1;
 type FIND_EXIT_RIGHT = 3;
@@ -2559,6 +2575,7 @@ type FIND_MY_POWER_CREEPS = 120;
 type FIND_HOSTILE_POWER_CREEPS = 121;
 type FIND_DEPOSITS = 122;
 type FIND_RUINS = 123;
+type FIND_REACTORS = 10051;
 
 // Filter Options
 
@@ -2735,7 +2752,8 @@ type MineralConstant =
     | RESOURCE_ZYNTHIUM
     | RESOURCE_OXYGEN
     | RESOURCE_HYDROGEN
-    | RESOURCE_CATALYST;
+    | RESOURCE_CATALYST
+    | RESOURCE_THORIUM;
 
 /** The compounds which can't boost */
 type MineralBaseCompoundsConstant = RESOURCE_HYDROXIDE | RESOURCE_ZYNTHIUM_KEANITE | RESOURCE_UTRIUM_LEMERGITE | RESOURCE_GHODIUM;
@@ -2917,6 +2935,8 @@ type RESOURCE_EXTRACT = "extract";
 type RESOURCE_SPIRIT = "spirit";
 type RESOURCE_EMANATION = "emanation";
 type RESOURCE_ESSENCE = "essence";
+
+type RESOURCE_THORIUM = "T";
 
 type SUBSCRIPTION_TOKEN = "token";
 type CPU_UNLOCK = "cpuUnlock";
@@ -4490,6 +4510,35 @@ interface RawMemory {
 }
 
 declare const RawMemory: RawMemory;
+/**
+ * An object that process Thorium into season score.
+ */
+interface Reactor extends RoomObject {
+    /**
+     * A unique object identifier. You can use `Game.getObjectById` method to retrieve an object instance by its `id`.
+     */
+    id: Id<this>;
+    /**
+     * Ticks of continuous work of this reactor.
+     */
+    continuousWork: number;
+    /**
+     * A Store object that contains cargo of this structure.
+     */
+    store: Store<RESOURCE_THORIUM, false>;
+    /**
+     * Whether you control this reactor.
+     */
+    my: boolean;
+    /**
+     * An object with the reactor's owner info.
+     */
+    owner: Owner;
+}
+
+interface ReactorConstructor extends _Constructor<Reactor> {}
+
+declare const Reactor: ReactorConstructor;
 /**
  * A dropped piece of resource.
  *
