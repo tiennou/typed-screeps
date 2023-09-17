@@ -24,13 +24,7 @@ const anotherRoomName: Room = Game.rooms.W10S11;
 
 // Sample memory extensions
 interface Memory {
-    creeps: Record<
-        string,
-        {
-            sourceId: Id<Source>;
-            lastHits: number;
-        }
-    >;
+    creeps: Record<string, { sourceId: Id<Source>; lastHits: number } & ({ type: "foo"; foo: number } | { type: "bar"; bar: number })>;
     flags: Record<string, unknown>;
     spawns: Record<string, unknown>;
     rooms: Record<string, unknown>;
@@ -150,6 +144,8 @@ function resources(o: GenericStore): ResourceConstant[] {
             memory: {
                 sourceId: "" as Id<Source>,
                 lastHits: 0,
+                type: "foo",
+                foo: 1000,
             },
         });
 
