@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v3.4.0] - 2026-04-25
 
 ### Added
 
@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add `CommodityTypes` type and `CommidityEntry` interface ([#212](https://github.com/screepers/typed-screeps/pull/212))
 - Add RoomTerrain.getRawBuffer() ([#247](https://github.com/screepers/typed-screeps/pull/247))
 - Feat: Setting the Order type to ORDER_BUY | ORDER_SELL instead of string ([#255](https://github.com/screepers/typed-screeps/pull/255))
+- Add restricted shard support by @tiennou in ([#290](https://github.com/screepers/typed-screeps/pull/290))
 
 ### Updated
 
@@ -30,10 +31,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix: lookForAtArea matrix result type. ([#253](https://github.com/screepers/typed-screeps/pull/253))
 - Update Game.market.deal documentation ([#256](https://github.com/screepers/typed-screeps/pull/256))
 - Fix a transferEnergy type error where it suggested a creep. ([#258](https://github.com/screepers/typed-screeps/pull/258))
+- Improve docs on Game.map.findRoute by @tiennou in ([#262](https://github.com/screepers/typed-screeps/pull/262))
+- Cleanup unused code by @tiennou in ([#264](https://github.com/screepers/typed-screeps/pull/264))
+- Type Mineral.density by @tiennou in ([#268](https://github.com/screepers/typed-screeps/pull/268))
+- Document createOrder's parameter properly by @tiennou in ([#269](https://github.com/screepers/typed-screeps/pull/269))
+- Improve documentation for methods and their return types by @tiennou in ([#270](https://github.com/screepers/typed-screeps/pull/270))
+- Update the Game.market.calcTransactionCost formula by @tiennou in ([#277](https://github.com/screepers/typed-screeps/pull/277))
+- Fix EVENT_BUILD data by @rmuchan in ([#279](https://github.com/screepers/typed-screeps/pull/279))
+- Default heuristicWeight is 1.2, not 1 by @tiennou in ([#278](https://github.com/screepers/typed-screeps/pull/278))
 
 ### Removed
 
-- Removes deprecated `Game.getObjectById(id: string)` function. Use version with `Id<T>` typed ids. ([#207](https://github.com/screepers/typed-screeps/pull/207))
+- None
 
 ## 3.3.2 to 3.3.8
 
