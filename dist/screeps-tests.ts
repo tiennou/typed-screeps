@@ -497,6 +497,14 @@ function resources(o: GenericStore): ResourceConstant[] {
         },
     });
 
+    // Room.findPath
+    const _path1 = pfCreep.room.findPath(pfCreep.pos, goals[0].pos, {
+        // costCallback may return nothing (void)
+        costCallback(roomName, costMatrix) {
+            return;
+        },
+    });
+
     const pos = ret.path[0];
     pfCreep.move(pfCreep.pos.getDirectionTo(pos));
 

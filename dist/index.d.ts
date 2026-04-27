@@ -2238,6 +2238,7 @@ interface FindPathOpts {
      * @param costMatrix The current CostMatrix
      * @returns The new CostMatrix to use
      */
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
     costCallback?: (roomName: string, costMatrix: CostMatrix) => void | CostMatrix;
 
     /**

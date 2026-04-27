@@ -7,6 +7,11 @@ export const sharedOpts = tseslint.config(
     expectType,
     // global ignore
     { ignores: ["build/*", "eslint.config.*"], },
+    {
+        rules: {
+            "@typescript-eslint/no-invalid-void-type": "error",
+        }
+    }
 );
 
 export default tseslint.config(
