@@ -2128,10 +2128,10 @@ interface CPUShardLimits {
 }
 
 /** A general purpose Store, which has a limited capacity */
-type StoreDefinition = Store<ResourceConstant, false>;
+type StoreDefinition = StoreOf<ResourceConstant, false>;
 
 /** A general purpose Store, which has an unlimited capacity */
-type StoreDefinitionUnlimited = Store<ResourceConstant, true>;
+type StoreDefinitionUnlimited = StoreOf<ResourceConstant, true>;
 
 /**
  * @example
@@ -5530,7 +5530,7 @@ interface StructureSpawn extends OwnedStructure<STRUCTURE_SPAWN> {
     /**
      * A Store object that contains cargo of this structure.
      */
-    store: Store<RESOURCE_ENERGY, false>;
+    store: StoreOf<RESOURCE_ENERGY, false>;
     /**
      * Check if a creep can be created.
      *
@@ -5739,7 +5739,51 @@ interface SpawningConstructor extends _Constructor<Spawning> {
     new (id: Id<StructureSpawn>): Spawning;
     (id: Id<StructureSpawn>): Spawning;
 }
-interface StoreBase<POSSIBLE_RESOURCES extends ResourceConstant, UNLIMITED_STORE extends boolean> {
+/**
+ * An object that can contain resources in its cargo.
+ *
+ * There are two types of stores in the game: general purpose stores and limited stores.
+ *
+ * General purpose stores can contain any resource within its capacity (e.g. creeps, containers, storages, terminals).
+ *
+ * Limited stores can contain only a few types of resources needed for that particular object (e.g. spawns, extensions, labs, nukers).
+ *
+ * The Store prototype is the same for both types of stores, but they have different behavior depending on the resource argument in its methods.
+ *
+ * You can get specific resources from the store by addressing them as object properties:
+ * ```
+ * console.log(creep.store[RESOURCE_ENERGY]);
+ * ```
+ *
+ * Augment this interface to add methods via `Store.prototype` — they will apply to
+ * `Store.prototype` and all store instances (including {@link StoreOf}).
+ */
+interface Store extends Record<ResourceConstant, number> {
+    /**
+     * Returns capacity of this store for the specified resource.
+     *
+     * For a general purpose store, it returns total capacity if `resource` is undefined.
+     * @param resource The type of the resource.
+     * @returns Returns capacity number, or `null` in case of an invalid `resource` for this store type.
+     */
+    getCapacity(resource?: ResourceConstant): number | null;
+    /**
+     * Returns the capacity used by the specified resource, or total used capacity for general purpose stores if `resource` is undefined.
+     * @param resource The type of the resource.
+     * @returns Returns used capacity number, or `null` in case of a not valid `resource` for this store type.
+     */
+    getUsedCapacity(resource?: ResourceConstant): number | null;
+    /**
+     * Returns free capacity for the store.
+     *
+     * For a limited store, it returns the capacity available for the specified resource if `resource` is defined and valid for this store.
+     * @param resource The type of the resource.
+     * @returns Returns available capacity number, or `null` in case of an invalid `resource` for this store type.
+     */
+    getFreeCapacity(resource?: ResourceConstant): number | null;
+}
+
+interface StoreConstrained<POSSIBLE_RESOURCES extends ResourceConstant, UNLIMITED_STORE extends boolean> extends Store {
     /**
      * Returns capacity of this store for the specified resource.
      *
@@ -5786,53 +5830,14 @@ interface StoreBase<POSSIBLE_RESOURCES extends ResourceConstant, UNLIMITED_STORE
         : null;
 }
 
-type Store<POSSIBLE_RESOURCES extends ResourceConstant, UNLIMITED_STORE extends boolean> = StoreBase<
+type StoreOf<POSSIBLE_RESOURCES extends ResourceConstant, UNLIMITED_STORE extends boolean> = StoreConstrained<
     POSSIBLE_RESOURCES,
     UNLIMITED_STORE
 > & { [P in POSSIBLE_RESOURCES]: number } & { [P in Exclude<ResourceConstant, POSSIBLE_RESOURCES>]: 0 };
 
-/**
- * An object that can contain resources in its cargo.
- *
- * There are two types of stores in the game: general purpose stores and limited stores.
- *
- * General purpose stores can contain any resource within its capacity (e.g. creeps, containers, storages, terminals).
- *
- * Limited stores can contain only a few types of resources needed for that particular object (e.g. spawns, extensions, labs, nukers).
- *
- * The Store prototype is the same for both types of stores, but they have different behavior depending on the resource argument in its methods.
- *
- * You can get specific resources from the store by addressing them as object properties:
- * ```
- * console.log(creep.store[RESOURCE_ENERGY]);
- * ```
- */
-interface GenericStoreBase {
-    /**
-     * Returns capacity of this store for the specified resource.
-     *
-     * For a general purpose store, it returns total capacity if `resource` is undefined.
-     * @param resource The type of the resource.
-     * @returns Returns capacity number, or `null` in case of an invalid `resource` for this store type.
-     */
-    getCapacity(resource?: ResourceConstant): number | null;
-    /**
-     * Returns the capacity used by the specified resource, or total used capacity for general purpose stores if `resource` is undefined.
-     * @param resource The type of the resource.
-     * @returns Returns used capacity number, or `null` in case of a not valid `resource` for this store type.
-     */
-    getUsedCapacity(resource?: ResourceConstant): number | null;
-    /**
-     * Returns free capacity for the store.
-     *
-     * For a limited store, it returns the capacity available for the specified resource if `resource` is defined and valid for this store.
-     * @param resource The type of the resource.
-     * @returns Returns available capacity number, or `null` in case of an invalid `resource` for this store type.
-     */
-    getFreeCapacity(resource?: ResourceConstant): number | null;
-}
+interface StoreConstructor extends _Constructor<Store> {}
 
-type GenericStore = GenericStoreBase & { [P in ResourceConstant]: number };
+declare const Store: StoreConstructor;
 /**
  * The base prototype object of all structures.
  */
@@ -6027,7 +6032,7 @@ interface StructureExtension extends OwnedStructure<STRUCTURE_EXTENSION> {
     /**
      * A Store object that contains cargo of this structure.
      */
-    store: Store<RESOURCE_ENERGY, false>;
+    store: StoreOf<RESOURCE_ENERGY, false>;
 }
 
 interface StructureExtensionConstructor extends _Constructor<StructureExtension>, _ConstructorById<StructureExtension> {}
@@ -6057,7 +6062,7 @@ interface StructureLink extends OwnedStructure<STRUCTURE_LINK> {
     /**
      * A Store object that contains cargo of this structure.
      */
-    store: Store<RESOURCE_ENERGY, false>;
+    store: StoreOf<RESOURCE_ENERGY, false>;
     /**
      * Transfer energy from the link to another link.
      *
@@ -6182,7 +6187,7 @@ interface StructurePowerSpawn extends OwnedStructure<STRUCTURE_POWER_SPAWN> {
     /**
      * A Store object that contains cargo of this structure.
      */
-    store: Store<RESOURCE_ENERGY | RESOURCE_POWER, false>;
+    store: StoreOf<RESOURCE_ENERGY | RESOURCE_POWER, false>;
 
     /**
      * Register power resource units into your account.
@@ -6300,7 +6305,7 @@ interface StructureTower extends OwnedStructure<STRUCTURE_TOWER> {
     /**
      * A Store object that contains cargo of this structure.
      */
-    store: Store<RESOURCE_ENERGY, false>;
+    store: StoreOf<RESOURCE_ENERGY, false>;
 
     /**
      * Remotely attack any creep or structure in the room.
@@ -6416,7 +6421,7 @@ interface StructureLab extends OwnedStructure<STRUCTURE_LAB> {
     /**
      * A Store object that contains cargo of this structure.
      */
-    store: Store<RESOURCE_ENERGY | MineralConstant | MineralCompoundConstant, false>;
+    store: StoreOf<RESOURCE_ENERGY | MineralConstant | MineralCompoundConstant, false>;
     /**
      * Boosts creep body part using the containing mineral compound.
      *
@@ -6598,7 +6603,7 @@ interface StructureNuker extends OwnedStructure<STRUCTURE_NUKER> {
     /**
      * A Store object that contains cargo of this structure.
      */
-    store: Store<RESOURCE_ENERGY | RESOURCE_GHODIUM, false>;
+    store: StoreOf<RESOURCE_ENERGY | RESOURCE_GHODIUM, false>;
     /**
      * Launch a nuke to the specified position.
      * @param pos The target room position.
